@@ -8,5 +8,5 @@ An example of Server-Side Rendering for a React App based on these references:
 
 Some troubleshooting help as this blog was a little outdated 😉
 
-- [Fixes problem in .bablerc.json file](https://stackoverflow.com/questions/32070303/uncaught-referenceerror-react-is-not-defined)causing Uncaught ReferenceError: React is not defined error
-- Installation of the webpack CLI `npm install -D webpack-cli` was needed as well as the [webpack-node-externals](https://www.npmjs.com/package/webpack-node-externals) package
+- [Fixes problem in .bablerc.json file](https://stackoverflow.com/questions/32070303/uncaught-referenceerror-react-is-not-defined) causing `Uncaught ReferenceError: React is not defined error`
+- Installation of the webpack CLI `npm install -D webpack-cli` was needed as well as the [webpack-node-externals](https://www.npmjs.com/package/webpack-node-externals) package.
