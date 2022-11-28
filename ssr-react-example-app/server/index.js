@@ -1,35 +1,56 @@
-import path from "path";
-import fs from "fs";
-
+import {
+  ApolloProvider,
+  ApolloClient,
+  HttpLink,
+  InMemoryCache,
+} from "@apollo/client";
+import Express from "express";
 import React from "react";
-import ReactDOMServer from "react-dom/server";
-import express from "express";
+import StaticRouter from "react-router";
+import { getDataFromTree } from "@apollo/client/react/ssr";
+import * as ReactDOMServer from "react-dom/server";
+import Html from "../components/html";
+import fetch from "cross-fetch";
 
-import App from "../src/App";
+const app = new Express();
+app.use((req, res) => {
+  const client = new ApolloClient({
+    ssrMode: true,
+    link: new HttpLink({
+      uri: "http://localhost:3006",
+      credentials: "same-origin",
+      fetch,
+      headers: {
+        cookie: req.header("Cookie"),
+      },
+    }),
+    cache: new InMemoryCache(),
+  });
 
-const PORT = process.env.PORT || 3006;
-const app = express();
+  const context = {};
 
-// ...
+  // The client-side App will instead use <BrowserRouter>
+  const App = (
+    <ApolloProvider client={client}>
+      <StaticRouter location={req.url} context={context}></StaticRouter>
+    </ApolloProvider>
+  );
 
-app.get("/", (req, res) => {
-  const app = ReactDOMServer.renderToString(<App />);
-  const indexFile = path.resolve("./build/index.html");
+  getDataFromTree(App).then((content) => {
+    // Extract the entirety of the Apollo Client cache's current state
+    const initialState = client.extract();
+    // Add both the page content and the cache state to a top-level component
+    const html = <Html content={content} state={initialState} />;
 
-  fs.readFile(indexFile, "utf8", (err, data) => {
-    if (err) {
-      console.error("Something went wrong:", err);
-      return res.status(500).send("Oops, better luck next time!");
-    }
-
-    return res.send(
-      data.replace('<div id="root"></div>', `<div id="root">${app}</div>`)
-    );
+    // Render the component to static markup and return it]
+    res.status(200);
+    res.send(`<!doctype html>\n${ReactDOMServer.renderToStaticMarkup(html)}`);
+    res.end();
   });
 });
 
-app.use(express.static("./build"));
+const basePort = 3006;
 
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
-});
+app.listen(basePort, () =>
+  console.log(`app Server is now running on http://localhost:${basePort}`)
+);
